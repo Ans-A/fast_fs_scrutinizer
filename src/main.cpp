@@ -1,5 +1,24 @@
 #include <iostream>
+#include <filesystem>
+namespace fs = std::filesystem;
+int main(int argc, char* argv[]) {
+    if (argc < 2){
+        std::cerr << "Usage: " << argv[0] << " <directory_path>\n";
+        return 1;
+    }
+    fs::path target_path = argv[1];
 
-int main() {
-    std::cout << "Hellooo \n";
+    if(!fs::exists(target_path)){
+        std::cerr<<"Error: Directory'"<<target_path<<"'does not exist\n";
+        return 1;
+    }
+
+    if(!fs::is_directory(target_path)){
+        std::cerr<<"Error: '"<<target_path<<"'is not a directory\n";
+        return 1;
+
+    }
+    std::cout<<"Successfully validated directory"<<target_path<<'\n';
+
+    return 0;
 }
