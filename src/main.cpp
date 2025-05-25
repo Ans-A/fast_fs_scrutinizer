@@ -39,3 +39,15 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
+
+
+std::optional<std::string> handleArguments(int argc, char* argv[]){
+
+    if (argc<2){
+
+        std::cerr << "We have less than 2 arguments, we need argumentsd to run this badboy\n";
+        return std::nullopt;
+    }
+    return std::string(argv[1]);
+}
