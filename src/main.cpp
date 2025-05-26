@@ -6,18 +6,20 @@
 namespace fs = std::filesystem;
 
 
-std::optional<std::string> parseArgs(int argc, char* argv[]);
-
-std::optional<fs::path> validatePath(const std::string& raw_path);
-
-bool scanPathDir(const fs::path& dirPath);
-
 struct FileInfo{
     std::string path;
     uintmax_t size;
     fs::file_time_type last_write_time;
     bool is_directory;
 };
+
+std::optional<std::string> parseArgs(int argc, char* argv[]);
+
+std::optional<fs::path> validatePath(const std::string& raw_path);
+
+std::optional<std::vector<FileInfo>> scanPathDir(const fs::path& dirPath);
+
+
 
 
 std::string format_system_time(const std::chrono::system_clock::time_point& time_point){
@@ -68,7 +70,6 @@ int main(int argc, char* argv[]) {
 std::optional<std::string> parseArgs(int argc, char* argv[]){
 
     if (argc<2){
-
         logError("We have less than 2 arguments, we need a directory path to run this badboy!");
         return std::nullopt;
     }
@@ -90,11 +91,11 @@ std::optional<fs::path> validatePath(const std::string& raw_path){
     return target_path;
 }
 
-bool scanPathDir(const fs::path& dir_path) {
-    logInfo("We're scanning this dir: '" + dir_path.string());
+std::optional<std::vector<FileInfo>> scanPathDir(const fs::path& dirPath) {
+    logInfo("We're scanning this dir: '" + dirPath.string());
     std::vector<FileInfo> collected_files;
     try {
-        for (const auto& entry : fs::recursive_directory_iterator(dir_path)){
+        for (const auto& entry : fs::recursive_directory_iterator(dirPath)){
             FileInfo info;
 
             info.path = entry.path().string();
@@ -106,17 +107,16 @@ bool scanPathDir(const fs::path& dir_path) {
             } else{
                 info.size = 0;
             }
-            auto ftime = fs::last_write_time(entry.path());
-            info.last_write_time = std::chrono::system_clock::from_time_t(std::chrono::system_clock::to_time_t(ftime));
+            info.last_write_time = fs::last_write_time(entry.path());
             collected_files.push_back(info);
             logInfo("We got this entry:" + entry.path().string());
         }
     }
     catch (const fs::filesystem_error& e){
-        logError("Woah, filesystem error, dude, couldn't scan '" + dir_path.string() + "': " + e.what());
-        return false;
+        logError("Woah, filesystem error, dude, couldn't scan '" + dirPath.string() + "': " + e.what());
+        return std::nullopt;;
     }
-        return true;
+        return collected_files;
     }
 
 
