@@ -1,6 +1,9 @@
 #include <iostream>
 #include <filesystem>
 #include <optional>
+#include <string>
+#include <chrono>
+#include <vector>
 namespace fs = std::filesystem;
 
 
@@ -10,7 +13,28 @@ std::optional<fs::path> validatePath(const std::string& raw_path);
 
 bool scanPathDir(const fs::path& dirPath);
 
+struct FileInfo{
+    std::string path;
+    uintmax_t size;
+    fs::file_time_type last_write_time;
+    bool is_directory;
+};
 
+
+std::string format_system_time(const std::chrono::system_clock::time_point& time_point){
+        
+    std::time_t tt = std::chrono::system_clock::to_time_t(time_point);
+
+        std::tm* ptm = std::localtime(&tt);
+
+        if(!ptm){
+            return "Time ain't valid, boi";
+        }
+        std::stringstream ss;
+        ss << std::put_time(ptm, "%Y-%m-%d %H:%M:%S");
+        return ss.str();
+
+}
 
 
 
@@ -68,9 +92,24 @@ std::optional<fs::path> validatePath(const std::string& raw_path){
 }
 
 bool scanPathDir(const fs::path& dir_path) {
-    std::cout <<"We're scanning this dir: '" <<dir_path<<"'\n";
+    logInfo("We're scanning this dir: '" + dir_path.string());
+    std::vector<FileInfo> collected_files;
     try {
         for (const auto& entry : fs::recursive_directory_iterator(dir_path)){
+            FileInfo info;
+
+            info.path = entry.path().string();
+            info.is_directory = entry.is_directory();
+
+            if(entry.is_regular_file()){
+                info.size = fs::file_size(entry.path());
+
+            } else{
+                info.size = 0;
+            }
+            auto ftime = fs::last_write_time(entry.path());
+            info.last_write_time = std::chrono::system_clock::from_time_t(std::chrono::system_clock::to_time_t(ftime));
+            collected_files.push_back(info);
             logInfo("We got this entry:" + entry.path().string());
         }
     }
