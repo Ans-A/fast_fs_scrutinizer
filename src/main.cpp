@@ -3,6 +3,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <chrono>
 namespace fs = std::filesystem;
 
 
@@ -56,13 +57,35 @@ int main(int argc, char* argv[]) {
             fs::path validated_path = *validated_path_opt;
 
             logInfo("Path is valid, dude, this one ------>" + validated_path.string());
-            
-            if(scanPathDir(validated_path)){
-                logInfo("All good, we just scanned the directory. Mission accomplished!");
+
+            if(auto files_opt = scanPathDir(validated_path); files_opt.has_value()){
+                logInfo("All good, we've scanned the directory");
+
+                const std::vector<FileInfo>& found_files = *files_opt;
+                logInfo("****************----------- Scan results -----------****************");
+                if(found_files.empty()){
+                    logInfo("No files or folders in this bad boy" + validated_path.string());
+                    
+                } else {
+                    logInfo("Found: --> " + std::to_string(found_files.size()) + " files in " + "validated_path.string()" +"' <--");
+
+                    for(const auto& file_info : found_files){
+                        logInfo("Path: " + file_info.path);
+                        logInfo(std::string(file_info.is_directory ? "[DIR]" : "[FILE]"));
+                        logInfo("Size: " + std::to_string(file_info.size) + " bytes");
+                        //TODO Find a cleaner way for this?
+                        auto system_time = std::chrono::clock_cast<std::chrono::system_clock>(file_info.last_write_time);
+                        logInfo("Last Write Time: " + format_system_time(system_time));
+                        logInfo("=======================================");
+                    }
+                }
                 return 0;
+            } else {
+                logError("Directory scan didn't return anything because we got some bug in our mug");
             }
         }
     }
+    return 1;
 }
 
 
@@ -109,6 +132,7 @@ std::optional<std::vector<FileInfo>> scanPathDir(const fs::path& dirPath) {
             }
             info.last_write_time = fs::last_write_time(entry.path());
             collected_files.push_back(info);
+            //TODO: consider the logging performance hit9 
             logInfo("We got this entry:" + entry.path().string());
         }
     }
