@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
             fs::path validated_path = *validated_path_opt;
 
             logInfo("Path is valid, dude, this one ------>" + validated_path.string());
-
+            
             if(scanPathDir(validated_path)){
                 logInfo("All good, we just scanned the directory. Mission accomplished!");
                 return 0;
@@ -92,7 +92,7 @@ std::optional<fs::path> validatePath(const std::string& raw_path){
 }
 
 std::optional<std::vector<FileInfo>> scanPathDir(const fs::path& dirPath) {
-    logInfo("We're scanning this dir: '" + dirPath.string());
+    logInfo("We're scanning this dir: '" + dirPath.string() + "'.");
     std::vector<FileInfo> collected_files;
     try {
         for (const auto& entry : fs::recursive_directory_iterator(dirPath)){
