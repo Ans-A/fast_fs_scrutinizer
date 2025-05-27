@@ -104,7 +104,7 @@ std::optional<std::vector<FileInfo>> scanPathDir(const fs::path& dirPath) {
             if(entry.is_regular_file()){
                 info.size = fs::file_size(entry.path());
 
-            } else{
+            } else {
                 info.size = 0;
             }
             info.last_write_time = fs::last_write_time(entry.path());
